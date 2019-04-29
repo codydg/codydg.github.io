@@ -1,6 +1,13 @@
 pico-8 cartridge // http://www.pico-8.com
 version 16
 __lua__
+--[[
+todo list:
+make ghosts
+progression
+score
+lives
+--]]
 
 function _init()
 	directions = {
@@ -20,6 +27,7 @@ function _init()
 	player = {}
 	player.sprites = {33, 1, 17, 49}
 	player.direction = 0
+	player.intention = player.direction
 	player.anim_length = 2
 	player.current_frame = 0
 	player.move_sound = 0
@@ -41,11 +49,19 @@ function _init()
 	top_edge = map_dims.y - 7
 end
 
+function check_sprite(x, y)
+	return mget(flr((x - map_dims.x)/8 + map_dims.sprite_x), flr((y - map_dims.y)/8 + map_dims.sprite_y))
+end
+
+function set_sprite(x, y, sprite)
+	mset(flr((x - map_dims.x)/8 + map_dims.sprite_x), flr((y - map_dims.y)/8 + map_dims.sprite_y), sprite)
+end
+
 function is_an_obstacle(x, y, direction)
 	x += direction[1]
 	y += direction[2]
 	
-	sprite_pxl = mget(flr((x - map_dims.x)/8 + map_dims.sprite_x), flr((y - map_dims.y)/8 + map_dims.sprite_y))
+	sprite_pxl = check_sprite(x, y)
 	return fget(sprite_pxl, 0)
 end
 
@@ -67,12 +83,31 @@ function _update()
 		player.current_frame = 0
 	end
 	
+	--reading player's intention
 	for i = 0,3 do
 		if btnp(i) then
-			player.direction = i
+			player.intention = i
 		end
 	end
 	
+	if (player.direction < 2) == (player.intention < 2) then
+		player.direction = player.intention
+	end
+	
+	if (player.x - map_dims.x) % 8 == 0 and (player.y - map_dims.y) % 8 == 0 then
+		--detect if pacman can change directions
+		intention = directions[player.intention + 1]
+		if not player_collides(player.x, player.y, intention) then
+			player.direction = player.intention
+		end
+		
+		--eat consumables behind pacman
+		if fget(check_sprite(player.x,
+				 player.y),1) then
+			set_sprite(player.x, player.y, 0)
+		end
+	end
+	--detect if 'player' can move in 'direction'
 	direction = directions[player.direction + 1]
 	if not player_collides(player.x, player.y, direction) then
  	player.x += direction[1]
