@@ -43,6 +43,8 @@ function _init()
  	end		
 	end
 	
+	players = { player }
+	
 	left_edge = map_dims.x - 7
 	right_edge = map_dims.width * 8 - 1 + map_dims.x
 	bottom_edge = map_dims.height * 8 - 1 + map_dims.y
@@ -70,61 +72,67 @@ function player_collides(x, y, direction)
 end
 
 function _update()
-	player.current_frame += 1
-	player.sound_step += 1
+	for player_index = 1,#players do
+		player = players[player_index]
 	
-	if player.sound_step >= player.sound_speed then
-		sfx(player.move_sound)
-		player.sound_step = 0
-	end
-	
-	if player.current_frame >= 
-						player.anim_length then
-		player.current_frame = 0
-	end
-	
-	--reading player's intention
-	for i = 0,3 do
-		if btnp(i) then
-			player.intention = i
-		end
-	end
-	
-	if (player.direction < 2) == (player.intention < 2) then
-		player.direction = player.intention
-	end
-	
-	if (player.x - map_dims.x) % 8 == 0 and (player.y - map_dims.y) % 8 == 0 then
-		--detect if pacman can change directions
-		intention = directions[player.intention + 1]
-		if not player_collides(player.x, player.y, intention) then
-			player.direction = player.intention
-		end
-		
-		--eat consumables behind pacman
-		if fget(check_sprite(player.x,
-				 player.y),1) then
-			set_sprite(player.x, player.y, 0)
-		end
-	end
-	--detect if 'player' can move in 'direction'
-	direction = directions[player.direction + 1]
-	if not player_collides(player.x, player.y, direction) then
- 	player.x += direction[1]
- 	player.y += direction[2]
-	end
-	
-	if player.x > right_edge then
-		player.x = left_edge
-	elseif player.x < left_edge then
-		player.x = right_edge
-	end
-	
-	if player.y > bottom_edge then
-		player.y = top_edge
-	elseif player.y < top_edge then
-		player.y = bottom_edge
-	end
+ 	player.current_frame += 1
+ 	player.sound_step += 1
+ 	
+ 	if player.sound_step >= player.sound_speed then
+ 		sfx(player.move_sound)
+ 		player.sound_step = 0
+ 	end
+ 	
+ 	if player.current_frame >= 
+ 						player.anim_length then
+ 		player.current_frame = 0
+ 	end
+ 	
+ 	--reading player's intention
+ 	for i = 0,3 do
+ 		if btnp(i) then
+ 			player.intention = i
+ 		end
+ 	end
+ 	
+ 	if (player.direction < 2) == (player.intention < 2) then
+ 		player.direction = player.intention
+ 	end
+ 	
+ 	if (player.x - map_dims.x) % 8 == 0 and (player.y - map_dims.y) % 8 == 0 then
+ 		--detect if pacman can change directions
+ 		intention = directions[player.intention + 1]
+ 		if not player_collides(player.x, player.y, intention) then
+ 			player.direction = player.intention
+ 		end
+ 		
+ 		--eat consumables behind pacman
+ 		if fget(check_sprite(player.x,
+ 				 player.y),1) then
+ 			set_sprite(player.x, player.y, 0)
+ 		end
+ 	end
+ 	--detect if 'player' can move in 'direction'
+ 	direction = directions[player.direction + 1]
+ 	if not player_collides(player.x, player.y, direction) then
+  	player.x += direction[1]
+  	player.y += direction[2]
+ 	end
+ 	
+ 	if player.x > right_edge then
+ 		player.x = left_edge
+ 	elseif player.x < left_edge then
+ 		player.x = right_edge
+ 	end
+ 	
+ 	if player.y > bottom_edge then
+ 		player.y = top_edge
+ 	elseif player.y < top_edge then
+ 		player.y = bottom_edge
+ 	end
+ 	
+ 	players[player_index] = player
+ end
 end
 
 function _draw()
@@ -136,11 +144,15 @@ function _draw()
 		map_dims.width * 8,
 	 map_dims.height * 8)
 	
-	sprite = player.sprites
-			[player.direction + 1]
-	sprite += player.current_frame
-	spr(sprite, player.x, player.y)
-
+	for player_index = 1,#players do
+ 	player = players[player_index]
+ 	
+ 	sprite = player.sprites
+ 			[player.direction + 1]
+ 	sprite += player.current_frame
+ 	spr(sprite, player.x, player.y)
+	end
+	
 	clip()	
 end
 __gfx__
